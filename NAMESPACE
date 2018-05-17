@@ -1,0 +1,7 @@
+exportPattern("^[^\\.]")
+useDynLib(aylmer)
+import(methods)
+import("Brobdingnag")
+
+importFrom("graphics", "plot.default")
+importFrom("stats", "optim", "runif")

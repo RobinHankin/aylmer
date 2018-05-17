@@ -1,0 +1,1055 @@
+ % -*- mode: noweb; noweb-default-code-mode: R-mode; -*-
+\documentclass[nojss]{jss}
+\usepackage{dsfont}
+\usepackage{bbm}
+\usepackage{amsfonts}
+\usepackage{wasysym}
+\usepackage{amssymb}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% declarations for jss.cls %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% just as usual
+\author{Luke J. West\\National Oceanography Centre, Southampton\And
+  Robin K. S. Hankin\\Auckland University of Technology}
+\title{Exact tests for two-way contingency tables with structural zeros}
+%\VignetteIndexEntry{A vignette for the aylmer package}
+%% for pretty printing and a nice hypersummary also set:
+\Plainauthor{Luke J. West and Robin K. S. Hankin}
+\Plaintitle{Exact tests for two-way contingency tables with structural zeros}
+\Shorttitle{Two-way contingency tables with structural zeros}
+
+%% an abstract and keywords
+\Abstract{Fisher's exact test, named for Sir Ronald Aylmer Fisher,
+  tests contingency tables for homogeneity of proportion.  This paper
+  discusses a generalization of Fisher's exact test for the case where
+  some of the table entries are constrained to be zero.  The resulting
+  test is useful for assessing cases where the null hypothesis of
+  conditional multinomial distribution is suspected to be false.  The
+  test is implemented in the form of a new \proglang{R} package,
+  \pkg{aylmer}.
+
+  This vignette is based on~\citet{west2008}.
+}
+
+\Keywords{Fisher's exact test, computational combinatorics,
+  \proglang{R}, multinomial distribution, rock-paper-scissors,
+  transitivity, pairwise comparison, odds ratio, one-sided tests,
+  structural zeros}
+\Plainkeywords{Fisher's exact test, computational combinatorics, R,
+  multinomial distribution, rock-paper-scissors, transitivity,
+  pairwise comparison, odds ratio, one-sided tests, structural zeros}
+
+%% publication information
+%% NOTE: This needs to filled out ONLY IF THE PAPER WAS ACCEPTED.
+%% If it was not (yet) accepted, leave them commented.
+%% \Volume{13}
+%% \Issue{9}
+%% \Month{September}
+%% \Year{2004}
+%% \Submitdate{2004-09-29}
+%% \Acceptdate{2004-09-29}
+
+%% The address of (at least) one author should be given
+%% in the following format:
+\Address{
+  Luke J. West\qquad  Robin K. S. Hankin\\
+  Auckland University of Technology\\
+  Wakefield Street\\
+  Auckland NZ\\
+  \email{hankin.robin@gmail.com}
+}
+%% It is also possible to add a telephone and fax number
+%% before the e-mail in the following format:
+%% Telephone: +43/1/31336-5053
+%% Fax: +43/1/31336-734
+
+%% for those who use Sweave please include the following line (with % symbols):
+%% need no \usepackage{Sweave.sty}
+
+%% end of declarations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\twobytwo}{\mbox{$2\times 2$}}
+\SweaveOpts{}
+\begin{document}
+\section{Introduction}
+
+
+<<setup, echo=FALSE,print=FALSE>>=
+ignore <- require(aylmer,quietly=TRUE)
+ignore <- require(partitions,quietly=TRUE)
+@ 
+
+Fisher's exact test~\citep[page 96]{fisher1954} tests
+\twobytwo\ contingency tables for equality of proportion: under the
+null, the two rows are repeated Bernoulli trials with the same
+probability of success and failure.  It is straightforward to
+generalize the test to larger tables~\citep{freeman1951}.
+
+Fisher's test and all the tests considered in this paper share two
+characteristics.  Firstly, they are exact and not asymptotic: they are
+suitable for small cell counts~\citep{bishop1975}.  Secondly, they
+condition on the marginal totals; a cogent discussion for
+the~\twobytwo\ case is given by~\citet{howard1998}.  These tests have
+been discussed from a Neyman-Pearson perspective~\citep{lehmann1993},
+and criticized on the grounds that the marginal totals are
+informative~\citep{berkson1978}.
+
+The generalized tests are attractive because they are exact, and
+assess an interesting and plausible null hypothesis: each row
+comprises independent observations from the same multinomial
+distribution.  However, consider table~\ref{machine_defects}.  This
+dataset is taken from the discipline of industrial quality control:
+Four machines, A-D, produce articles and the number of defectives is
+tabulated under various operating conditions.  The first line shows a
+situation in which all four machines are on; the second line shows all
+machines on except D, and so on.  We call such a dataset, with
+obligatory zero entries---``structural zeros''---a {\em board}.  It is
+suspected that machine~D is causing some sort of interference with
+machine~A; note that machine~A produces very few defects except when~D
+is operating.
+
+\begin{table}
+\centering
+\begin{tabular}{|cccc|c|}\hline
+\multicolumn{4}{|c|}{machine}&\\ \hline
+A&B&C&D&total\\ \hline
+ 4       & 1       & 1       & 1  &  7 \\ 
+ 0       & 1       & 2       & -  &  3 \\
+ 2       & 1       & -       & 1  &  4 \\
+ 3       & -       & 2       & 0  &  5 \\ 
+ 3       & -       & -       & 2  &  5 \\ 
+ 0       & 4       & -       & -  &  4 \\ 
+ 0       & -       & 3       & -  &  3 \\ \hline
+12       & 7       & 8       & 4  & 31 \\ \hline
+\end{tabular}
+\caption{Industrial quality control (dataset \code{iqd} in the
+  package) for a factory with four parallel\label{machine_defects}
+  machines~A-D.  Entries show number of defects attributable to each
+  machine; dashes indicate machines which were switched off for that
+  row.  Note that machine~A produces no defects when machine~D is off}
+\end{table}
+
+The null hypothesis is that each row is a sample from a conditional
+multinomial distribution, conditioned on the machines that are
+switched off having zero count defectives.
+
+This article introduces software that tests such boards for
+homogeneity using a generalization of Fisher's test.  The software is
+written in the \proglang{C++} programming language and implemented in
+the form of \pkg{aylmer}, an \proglang{R}~\citep{rcore2008} package.
+The package provides \code{aylmer.test()}, a drop-in replacement for
+\code{fisher.test()} that can test contingency tables with structural
+zeros, such as the board shown in Table~\ref{machine_defects}.  We
+have not encountered the statistical test in the literature, and
+believe that computational implementation of this test is new.
+
+\section{Methodology and Algorithm}
+
+Recall that Fisher's exact test enumerates all contingency tables of a
+given size with the observed marginal totals; under the null, the
+probability of each of these is given by the hypergeometric
+distribution.  The p-value of a table is then defined,
+following~\citet{freeman1951}, as the total probability of all tables
+more extreme than the observed table: `more extreme' means that the
+probability does not exceed that of the observed table.  This
+definition is used in \code{fisher.test()}.
+
+Given a board, we define a {\em permissible} board as one with: the
+same marginal row- and column- totals; structural zeros in the same
+places; and no negative entries.  The \pkg{aylmer} package generalizes
+Fisher's exact test to allow for the possibility of structural zeros;
+the enumeration operates over permissible boards.
+
+\begin{figure}[p]
+  \begin{center}
+\includegraphics[width=14cm]{algorithm}
+\caption{A pictorial description of the algorithm used in function
+  \code{allboards()} to \label{algorithm} enumerate all permissible
+  boards.  Each table is assigned a letter from~A to~I.  Table~A shows
+  the initial configuration; marginal totals are shown and ``fixed''
+  entries are shown in grey; in the case of table~A these are
+  specified by the user.  The algorithm terminates when all entries
+  are fixed and the table becomes totally grayed out.  The ``pivot''
+  position of a table is shown as a black circle; this is chosen as
+  the square with the lowest variability: the row or column with the
+  smallest marginal is chosen, then the pivot square is the one with
+  the smallest cross-marginal.  This indicates position~$(3,3)$ of
+  table~A as both marginals of this square are~1.  The curved arrows
+  indicate the possible choices for the pivot square and are labelled
+  according to the origin of the table and pivot choice; thus arrow~A0
+  connects~A to~B (and~\code{B[3,3]=0}), and arrow~A1 connects~A to~G
+  (and~\code{G[3,3]=1}).  Filling in the pivot element with~0 in
+  table~B allows one to deduce that \code{B[3,2]=1} and this element
+  appears shaded because it has become fixed; note that the second
+  marginal column sum and third marginal row sum of table~B have been
+  reduced by one: the marginal figures represent the marginal sum of
+  the {\em non-fixed} squares.  The algorithm terminates when the
+  entire table is gray or, equivalently, when the residual marginal
+  totals are all zero.  Thus tables~D,E,F,H,I enumerate the possible
+  tables having the specified marginal totals and specified zero
+  entries}
+  \end{center}
+\end{figure}
+
+\begin{figure}[p]
+  \begin{center}
+\includegraphics[width=14cm]{metropolis}
+\caption{A pictorial description of the algorithm used in
+  function\label{path} \code{randomboards()} to generate a random
+  table with given marginal totals}
+  \end{center}
+\end{figure}
+
+The probability of the observed board occurring (event~$A$), given
+that the board is permissible (event~$B$), is determined using the
+conditional probability rule~$\Prob(A|B)=\Prob(A\cap B)/\Prob(B)$.
+The package determines~$\Prob(B)$ using direct enumeration
+(permissible boards are enumerated using the algorithm outlined in
+Figure~\ref{algorithm}) and the multiple hypergeometric probability
+mass function~\citep[p97]{agresti2002}:
+
+%\begin{equation}\label{prob.of.B}
+%p(B)=
+%\sum_{\begin{array}{c}\mbox{permissible}\\ \mbox{boards}\end{array}}
+%\frac{
+%  \prod_{i=1}^{r}\left[\sum_{j=1\vphantom{i}}^{c}\left(n_{ij}\right)!\right]\cdot
+%  \prod_{j=1}^{c}\left[\sum_{i=1\vphantom{j}}^{r}\left(n_{ij}\right)!\right]\left/
+%  \left(\sum_{i=1}^{r}\sum_{j=1}^{c}n_{ij}\right)!\right.
+%      }{
+%\prod_{i=1}^{r}\prod_{j=1}^{c}\left(n_{ij}\right)!
+%}
+%\end{equation}
+
+\begin{equation}\label{prob.of.B}
+\Prob(B)=
+\sum_{\begin{array}{c}\mbox{permissible}\\ \mbox{boards}\end{array}}
+\frac{\left.
+  \prod_{i=1}^{r}t_i!\cdot
+  \prod_{j=1}^{c}s_i!\right/
+   N!
+      }{
+\prod_{i=1}^{r}\prod_{j=1}^{c}\left(n_{ij}\right)!
+}
+\end{equation}
+
+where~$s_i=\sum_{j=1}^{c}n_{ij}$ and~$t_j=\sum_{i=1}^{r}n_{ij}$ are
+the row- and column- sums respectively, and~$N=\sum s_i=\sum t_j$ is
+the total board count.  The numerator in equation~\ref{prob.of.B} is
+constant for all permissible boards so its evaluation is not
+necessary.
+
+Thus the null hypothesis that a particular table with specified zero
+elements (a board) is in fact drawn at random from all permissible
+boards is then tested just as in Fisher's test: the p-value is the sum
+of the probabilities of all permissible boards with a probability less
+than or equal to that of the observed board.
+
+\subsection{Enumerating the  distinct contingency tables with given
+  marginal totals}
+
+Because of the enumerative techniques used in this paper, it is
+important to have at least a rough idea of the number of boards that
+one must enumerate.
+
+There are a number of ways of
+assessing~$M=M\left(s_1,\ldots,s_r,t_1,\ldots,t_c\right)$, the number
+of distinct contingency tables with specified totals.  Most results
+are asymptotic; no simple exact formula for tables as small as~$r=s=3$
+is known.
+
+The appropriate generating function for contingency tables is
+$$\prod_{i=1}^{r}\prod_{j=1}^c\frac{1}{1-x_iy_j}$$
+[the number of boards is given by the coefficient of~$x_1^{s_1}\cdots
+  x_r^{s_r}y_1^{t_1}\cdots y_c^{t_c}$].  Generalizing this to a board
+is straightforward; the generating function is
+  $$
+  \prod_{{1\leqslant i\leqslant r\atop 1\leqslant j\leqslant c}\atop
+    (i,j)\in\{1,\ldots,r\}\times\{1,\ldots,c\}\backslash Z
+  }
+  \!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!
+  \frac{1}{1-x_iy_j}
+$$ where~$Z$ is the set of structural zeros.  \cite{good1976} presents
+  arguments that suggest
+\[
+\frac{\displaystyle
+    \prod_{i=1}^r\left(\begin{array}{c}s_i+r-1\\s_i\end{array}\right)
+    \prod_{j=1}^c\left(\begin{array}{c}t_j+c-1\\t_j\end{array}\right)
+  }{
+\left(\begin{array}{c}N+rc-1\\N\end{array}\right)
+}
+\]
+
+[function \code{good()} in the package] is asymptotic to~$M$.  If the
+number of permissible boards is large, as in the \code{frogs} or
+\code{icons} examples discussed below in
+section~\ref{pairwise_comparison}, the Monte Carlo techniques
+of~\cite{aoki2005} are used; our computational algorithm is outlined
+in Figure~\ref{path}.  Random permissible boards are generated and the
+p-value reported is as above except that instead of a complete
+enumeration, an ensemble of randomly generated boards is used.
+
+Figure~\ref{path} shows how a table is used to generate, randomly,
+another table by adding a perturbation called a `df1 loop'
+by~\citet{aoki2005}.  The table so generated is called a ``candidate''
+and is either accepted or rejected according to the standard
+Metropolis-Hastings algorithm~\citep{metropolis1953}: the frequencies
+of tables in the resulting Markov chain are (asymptotically)
+proportional to their probabilities given by
+Equation~\ref{prob.of.B}. 
+
+Two examples, one per row, are shown; structural zeros are shown in
+gray.  The algorithm generates a random closed path of alternating
+horizontal and vertical lines, shown in light blue.  A table generates
+a candidate table by alternately incrementing and decrementing squares
+on the corners of the path, thereby preserving the marginal totals.
+
+A non-gray square (``{\sc start}'') is chosen at random; this is
+marked with a black circle.  The path starts by choosing a random
+non-gray square in the same row as the start; from this square the
+path continues vertically to another non-gray square.  If the loop may
+be closed (that is, if the square on the same column as {\sc start}
+and the same row as the free end is non-gray) then the path is closed
+and the algorithm terminates.  If the path may not be closed (because
+the relevant square is gray), then the path is extended in a similar
+fashion; excepting that columns and rows with only a single remaining
+unshaded square are disallowed.  The resulting path then has the
+property that any row of the board has an even number of path corners:
+and no path corner lies on a gray square.  Thus taking a permissible
+board and alternately incrementing and decrementing squares along such
+a path will result in a permissible board: structural zeros (gray
+squares) remain zeros; and the marginal totals remain unaltered.
+Modifying a board in this manner yields the candidate sample for the
+Metropolis-Hastings algorithm.
+
+In the first row, the path proceeds from the {\sc start} to the square
+immediately to the left; thence to the square immediately above.  The
+path may be closed because the square immediately above {\sc start} is
+non-gray.  It is clear that if the board has no gray squares, a path
+of this type (viz: a simple square) is always chosen and the method
+reduces to that of \cite{raymond1995}.
+
+The second row of Figure~\ref{path} shows a more involved example in
+which the path needs a second leg to be closed; note how the path
+crosses itself (not forbidden).  Observe that the algorithm applied to
+boards with an ordered sample space---such as Table~\ref{chess}
+or~\ref{ordered_sample_space}---would result in every non-gray square
+being either incremented or decremented.
+  
+\section[Package aylmer in use]{Package \pkg{aylmer} in use}
+
+This section illustrates the functionality of the package with
+examples taken from industrial quality control, sociology of climate
+change, and behavioural neuropsychology.  The special case of pairwise
+comparisons is then discussed using examples from sports, aviation
+quality control, and animal behaviour.
+
+\subsection{Industrial quality control}
+
+Table~\ref{machine_defects} (dataset \code{iqd} in the package) may be
+tested straightforwardly using the \pkg{aylmer} package:
+
+<<load_iqd,print=FALSE,echo=FALSE,cache=FALSE>>=
+data(iqd)  # Table 1
+@ 
+
+<<test_iqd,print=FALSE,echo=FALSE,cache=TRUE>>=
+jj <- aylmer.test(iqd)
+@ 
+
+<<print_iqd,echo=FALSE,print=TRUE>>=
+jj
+@ 
+
+Thus the p-value would indicate failure to reject the null hypothesis
+at the~$5\%$ level.
+
+Further investigation suggests instead that machine~A produces more
+defects than expected when all other machines are switched on (row~1).
+In this case, the appropriate diagnostic would be that \code{iqd[1,1]}
+is larger than expected.  Following~\citet[page 326]{silvapulle2005}
+one would define a test statistic \code{f(x)=x[1,1]} and sum the
+probabilities of all permissible boards with \code{f(x)} $\geqslant$
+\code{f(iqd)}.  In package \pkg{aylmer}, the \proglang{R} idiom is to
+pass the test statistic, in the form of a function whose domain is the
+set of permissible boards, to argument \code{alternative} of
+\code{aylmer.test()}:
+
+<<test_iqd_alternative,print=FALSE,echo=FALSE,cache=TRUE>>=
+jj1 <- aylmer.test(iqd, alternative=function(x){x[1,1]})
+@ 
+
+\begin{Schunk}
+  \begin{Sinput}
+    > f <- function(x){x[1,1]}
+    > aylmer.test(iqd,alternative = f)
+  \end{Sinput}
+\end{Schunk}
+<<print_iqd_test,echo=FALSE,print=TRUE>>=
+jj1
+@ 
+
+Thus there is sufficient evidence to reject this null at the~$5\%$
+level.
+
+The same technique may be applied to ordered categorical factors; the
+\pkg{aylmer} package includes an illustration of this (type
+\code{?glass} at the \proglang{R} prompt).
+
+One might consider instead the effect of changing personnel.  Suppose
+now that there are three machines A, B, C and three supervisors S1,
+S2, S3.  It is suspected that the supervisors use slightly differing
+work practices and that these differences change the ratio of defects
+produced by the three machines.  However, on S1's shift, defects
+produced by machine~C cannot be detected (perhaps C's entire output
+for that day was discarded for some other, unrelated, reason).  The
+null hypothesis would be that the proportions of defects made by the
+three machines are independent of supervisor---or, that the
+proportions of defects produced during the shifts of the three
+supervisors are independent of the machine:
+
+<<aylmerTestA>>=
+shifts
+aylmer.test(shifts)
+@ 
+
+showing that one may reject the null hypothesis at the~$5\%$ level.
+Note that in this case the Fisher test is appropriate but may only be
+used on complete cases:
+
+<<fisherA>>=
+fisher.test(shifts[-1,  ])$p.value
+fisher.test(shifts[  ,-3])$p.value
+@ 
+
+(the first test considering only supervisors~S2 and~S3; and the second
+only machines~A and~B).  Thus there is insufficient evidence in either
+complete case to reject the null hypothesis at the~$5\%$ level;
+compare the aylmer test where all relevant information was retained
+and the null rejected.
+
+\subsection{Public perception of climate change}
+
+Lay perception of climate change is a complex and interesting
+process~\citep{lorenzoni2005}; the issue of immediate practical import
+is the engagement of non-experts by the use of ``icons''\footnote{This
+  word is standard in this context.  An icon is a ``representative
+  symbol''.} that illustrate different impacts of climate change.
+
+In one study~\citep{oneill2007}, subjects are presented with a set of
+icons of climate change and asked to identify which of them they find
+most concerning.  Six icons were used: PB [polar bears, which face
+  extinction through loss of ice floe hunting grounds], NB [the
+  Norfolk Broads, which flood due to intense rainfall events], L
+[London flooding, as a result of sea level rise], THC [the
+  thermo-haline circulation, which may slow or stop as a result of
+  anthropogenic modification of the water cycle], OA [oceanic
+  acidification as a result of anthropogenic emissions of~${\mathrm
+    C}{\mathrm O}_2$], and WAIS [the West Antarctic Ice Sheet, which
+  is rapidly calving as a result of climate change].
+
+Methodological constraints dictated that each respondent could be
+presented with a maximum of four icons.  Table~\ref{saffron} (dataset
+\code{icons} in the package) shows the experimental results.
+
+\begin{table}
+\centering
+\begin{tabular}{|cccccc|c|}\hline
+\multicolumn{6}{|c|}{icon}&\\ \hline
+NB & L & PB & THC & OA & WAIS & total\\ \hline
+5	&3	&-	&4	&-	&3	&15\\
+3	&-	&5	&8	&-	&2	&18\\
+-	&4	&9	&2	&-	&1	&16\\
+1	&3	&-	&3	&4	&-	&11\\
+4	&-	&5	&6	&3	&-	&18\\
+-	&4	&3	&1	&3	&-	&11\\
+5	&1	&-	&-	&1	&2	& 9\\
+5	&-	&1	&-	&1	&1	& 8\\
+-	&9	&7	&-	&2	&0	&18\\ \hline
+23      &24     &30     &24     &14     &9      &124\\ \hline
+\end{tabular}
+\caption{Experimental results\label{saffron} from \citet{oneill2007}
+  (dataset \code{icons} in the package): respondents' choice of `most
+  concerning' icon of those presented.  Thus the first row shows
+  results from respondents presented with icons NB, L, THC, and WAIS;
+  of the~15 respondents, 5 chose NB as the most concerning (see text
+  for a key to the acronyms).  Note the ``0'' in row~6, column~9: this
+  option was available to the~18 respondents of that row, but none of
+  them actually chose WAIS}
+\end{table}
+
+One natural null hypothesis~$H_0$ is that there exist~$p_1,\ldots,p_6$
+with~$\sum p_i=1$ such that the probability of choosing icon~$i$ is
+proportional to~$p_i$.  Alternative hypotheses are necessarily vague,
+but it is interesting to note that~$H_0$ is ``uncritically'' adopted
+in the literature~\citep{oneill2007}.  However, the exact Aylmer test
+discussed above cannot be used here as the sample space is too large;
+the number of possible boards consistent with the marginal totals is
+astronomical:
+
+\begin{Schunk}
+  \begin{Sinput}
+> data("icons")
+> good(icons)
+  \end{Sinput}
+\end{Schunk}
+
+
+<<loadIcons,echo=FALSE,print=FALSE>>=
+set.seed(0)
+data(icons)
+@ 
+
+<<useGood,echo=FALSE,print=TRUE>>=
+good(icons)
+@ 
+    
+Setting the \code{simulate.p.value} flag forces the package to use
+Monte-Carlo simulation techniques:
+
+<<calculateIconStats,cache=TRUE,echo=FALSE>>=
+iconstats <- aylmer.test(icons, simulate.p.value=TRUE)
+@
+
+\begin{Schunk}
+  \begin{Sinput}
+> aylmer.test(icons, simulate.p.value=TRUE)
+\end{Sinput}
+\end{Schunk}
+
+<<printIconStats,echo=FALSE,print=TRUE>>=
+iconstats
+@ 
+
+Thus there is insufficient evidence to reject the null
+hypothesis\footnote{Such estimates are necessarily random variables;
+  using a batch method, following~\cite{aoki2005}, we estimate the
+  true p-value to be~$0.164\pm 0.02$.} and on the assumption that a
+set of~$p_i$ exists, \citet{hankin2008a} presents software that
+calculates their values numerically.  It is interesting to note that
+there exist permissible boards with a probability, according to
+Equation~\ref{prob.of.B}, of over 20000 times that of the~\code{icons}
+dataset.
+
+The default value of the number of random samples to use in the
+Monte-Carlo case---argument~\code{B} of
+\code{aylmer.test()}---is~2000, following \code{fisher.test()}.
+Figure~\ref{purum} shows an example that illustrates graphically
+whether a given value is sufficient.
+
+\subsection{Social anthropology}
+
+\begin{table}
+\centering
+\begin{tabular}{|r|rrrrr|c|}\hline
+&\multicolumn{5}{|c|}{Husband's sib}&\\ \hline
+wife's sib &Marrim & Makan & Parpa & Thao & Kheyang &total\\ \hline
+Marrim    &-  &5&17&-&6&28\\
+Makan & 5&-&0&16&2&23\\
+Parpa &-&2&-&10&11&23\\
+Thao&10&-&-&-&9&19\\
+Kheyang&6&20&8&0&1&35\\ \hline
+total&21&27&25&26&29&128\\ \hline
+\end{tabular}
+\caption{ Data for 128 Purum marriages \label{purumtable} (dataset
+  \code{purum} in the package).  The Purums are an isolated tribe of
+  India, divided into five sibs.  \citet{white1963} argues that the
+  Purum sib is exogamous (that is, within-sib marriages are
+  disallowed; the single Kheyang-Kheyang marriage was a special case)
+  and that males and females could marry only in selected sibs.  In
+  the table, a dash denotes combinations forbidden by Purum tradition.
+  Note the lack of symmetry in the structural zeros, which implies a
+  gender asymmetry: thus a male Parpa may marry a female Marrim, but a
+  male Marrim may not marry a female Parpa}
+\end{table}
+
+
+<<dataPurum,echo=FALSE,print=FALSE,cache=FALSE>>=
+data(purum)
+@ 
+
+<<randomPurum,echo=FALSE,print=FALSE,cache=TRUE>>=
+set.seed(1)
+rP <- randomprobs(purum,B=800)
+@ 
+
+Table~\ref{purum} shows an example taken from social anthropology,
+detailing~128 marriages.  The standard null is rejected by the Aylmer
+test (see online documentation), in agreement with~\citet{bishop1975}:
+within the prescriptive framework, preference plays a part.  We wish
+to make inferences about gender asymmetry in the preferential
+component of the dataset.
+
+Given a pair of sibs, the marriage restrictions imply that at least
+one is a wife-giver, and at least one is a wife-taker: For example, in
+the case of Parpa-Marrim marriages, the Marrim are wife-givers and the
+Parpa are wife-takers.
+
+There are five pairs of sibs that may act as both wife-givers
+\emph{and} wife-takers.  Amongst these pairs, is there evidence to
+suggest that the preferences are gender asymmetric?
+
+An appropriate test function would be the maximum absolute difference
+between the number of M-F marriages and F-M marriages, amongst
+(ordered) pairs of sibs that allow both types of marriages:
+
+<<>>=
+g <- function(x) max(abs(x-t(x)),na.rm=TRUE)
+@ 
+
+One would expect \code{g(.)} to return small values if the sibs'
+behaviour is indeed gender neutral.  This hypothesis may be tested
+straightforwardly by sampling from permissible boards and reporting
+the fraction of boards with \code{g(.)} exceeding that of our
+observation:
+
+<<purum_gender,echo=FALSE,print=FALSE,cache=TRUE>>=
+set.seed(1)
+jj7 <- aylmer.test(purum, alternative=g, simulate.p.value=TRUE,B=2000)
+@ 
+
+\begin{Schunk}
+  \begin{Sinput}
+> aylmer.test(purum, alternative=g, simulate.p.value=TRUE, B=2000)
+  \end{Sinput}
+\end{Schunk}
+<<print_iqd_test,echo=FALSE,print=TRUE>>=
+jj7
+@ 
+
+Thus there is strong evidence that Purum marriage preferences are not
+gender neutral, even after accounting for the incest prohibitions
+marked by structural zeros.
+
+\begin{figure}[htbp]
+  \begin{center}
+<<plotPurum,echo=FALSE,fig=TRUE>>=
+plot(rP, xlab="index", ylab="log(Prob)", type="o", pch=16, cex=0.4, axes=FALSE)
+axis(side=1,pos=min(rP)-1)
+axis(side=2,pos= -20)
+val <-  -175.5185
+segments(x0=0,x1=800,y0=val,y1=val,col="gray",lwd=2)
+points(x = 1, y=rP[1],pch=16,cex=1.5)
+text(x = 1, y=rP[1],"observation",pos=4)
+@
+\caption{Probabilities of sequential boards \label{purum} in a Markov
+  chain of boards permissible to the {\em Purum} dataset shown in
+  Table~\ref{purumtable}.  To within a constant, the ordinate is the
+  natural logarithm of the probability of the Markov boards: the gray
+  horizontal line marks the critical region for an Aylmer test of
+  size~5\% (any board below this level is rejected).  The observation,
+  being the first member of the Markov chain, is clearly in the
+  critical region and the null may be rejected}
+  \end{center}
+\end{figure}
+
+\subsection{Pairwise comparison}
+\label{pairwise_comparison}
+
+Although each row of a board is in general a multinomial distribution,
+by far the most commonly occurring case is when all but two
+possibilities in each row are disallowed: the entries are then drawn
+from a binomial distribution, if the null hypothesis is correct.
+\citet{davidson1976} give an extensive bibliography
+of this case.
+
+Many examples exist of repeated pairwise comparisons between two of a
+larger number of ``players''.  Examples abound in the sporting
+world~\citep{jech1983}, although in sport the possibility of a draw
+must sometimes be considered.  Non-sporting examples would include
+forced-choice discrimination~\citep{bradley1952}: in the field of,
+say, olfactory research, a subject is repeatedly presented with two
+odours and asked to report which is preferable (or stronger, or
+whatever).
+
+The canonical null hypothesis, introduced by~\citet{zermelo1929}, is
+that there exist numbers~$\pi_1,\ldots,\pi_n$ (``skills'')
+with~$\sum_{i=1}^n\pi_i=1$; a match between player~$i$ and~$j$ is then
+a Bernoulli trial with probability~$\pi_i/(\pi_i+\pi_j)$;
+\citet{connor2000} give an historical overview.  Note that
+\citeauthor{zermelo1929}'s model readily generalizes to situations in
+which more than two players compete.
+
+\begin{table}
+\centering
+\begin{tabular}{|ccccccccc|c|}\hline
+\multicolumn{9}{|c|}{stimulus}&\\ \hline
+Sc&Sb &Ob&Oa&Oc&Sa&Sd&Od&M& \\ \hline
+10& 10& - & - & - & - & - & - & -  & 20\\ 
+12& - & 8 & - & - & - & - & - & -  & 20\\ 
+13& - & -  & 7& - & - & - & - & -  & 20\\ 
+14& - & - & - & 6 & - & - & - & -  & 20\\ 
+13& - & - & - & - & 7 & - & - & -  & 20\\ 
+16& - & - & - & - & - & 4 & - & -  & 20\\ 
+15& - & - & - & - & - & - & 5 & -  & 20\\ 
+17& - & - & - & - & - & - & - & 3  & 20\\ 
+- & 13& 7 & - & - & - & - & - & -  & 20\\ 
+- &  8& - & 12& - & - & - & - & -  & 20\\ 
+- & 12& - & - & 8 & - & - & - & -  & 20\\ 
+- & 16& - & - & - & 4 & - & - & -  & 20\\ 
+- & 19& - & - & - & - & 1 & - & -  & 20\\ 
+- & 15& - & - & - & - & - & 5 & -  & 20\\ 
+- & 16& - & - & - & - & - & - & 4  & 20\\ 
+- &  -& 12& 8 & - & - & - & - & -  & 20\\ 
+- &  -& 10& - & 10& - & - & - & -  & 20\\ 
+- &  -& 14& - & - & 6 & - & - & -  & 20\\ 
+- &  -& 12& - & - & - & 8 & - & -  & 20\\ 
+- &  -& 12& - & - & - & - & 8 & -  & 20\\ 
+- &  -& 18& - & - & - & - & - & 2  & 20\\ 
+- &  -& - & 10&10 & - & - & - & -  & 20\\ 
+- &  -& - & 10& - & 10& - & - & -  & 20\\ 
+- &  -& - & 16& - & - & 4 & - & -  & 20\\ 
+- &  -& - & 16& - & - & - & 4 & -  & 20\\ 
+- &  -& - & 11& - & - & - & - & 9  & 20\\ 
+- &  -& - & - & 5 &15 & - & - & -  & 20\\ 
+- &  -& - & - & 10& - & 10& - & -  & 20\\ 
+- &  -& - & - & 12& - & - & 8 & -  & 20\\ 
+- &  -& - & - & 18& - & - & - & 2  & 20\\ 
+- &  -& - & - & - & 14& 6 & - & -  & 20\\ 
+- &  -& - & - & - & 9 & - & 11& -  & 20\\ 
+- &  -& - & - & - & 11& - & - & 9  & 20\\ 
+- &  -& - & - & - & - & 15& 5 & -  & 20\\ 
+- &  -& - & - & - & - & 12& - & 8  & 20\\ 
+- &  -& - & - & - & - & - & 7 &13  & 20\\ \hline 
+110&109&93&90&79&76&60&53&50&720\\ \hline
+\end{tabular}
+\caption{Experimental results of \cite{kirkpatrick2006}, included as
+  the \code{frogs} dataset in the package. Each row corresponds to a
+  series of forced-choice experiments in which a female t\'{u}ngara
+  frog was exposed to two stimuli (mating calls of male frogs).  The
+  entries show the results; thus the first row shows that, when given
+  a choice between stimulus \code{Sc} and stimulus~\code{Sb}, each was
+  chosen~10 times.  Full details are given by~\cite{kirkpatrick2006}
+  and~\cite{ryan2003}.
+  \label{frogs}}
+\end{table}
+
+Consider the \code{frogs} dataset, provided with the package and shown
+in Table~\ref{frogs}.  This shows the result of repeated forced-choice
+experiments taken with the intention of investigating intransitive
+preferences.
+
+In this context, intransitivity is defined as the existence of
+stimuli~$s_1,\ldots,s_n$ with~$s_i\rightarrow s_{i+1}$ for~$1\leqslant
+i\leqslant n-1$ and~$s_n\rightarrow s_1$, where~``$a\rightarrow b$''
+means ``$a$ was preferred to~$b$ with a probability exceeding~0.5 in a
+forced-choice between~$a$ and~$b$''.  Such intransitive preferences
+are of great interest in the field of animal behaviour as they are
+readily observable and elucidate the neural algorithms underlying
+choice; explanation of non-transitive choice is a ``challenging
+problem''~\citep{colgan1985} and is ``the focus of considerable
+contemporary research''~\citep{waite2001}.  Note that
+\citeauthor{zermelo1929}'s null precludes intransitivity.
+
+However, the Aylmer test discussed above cannot be used
+here\footnote{Function \code{good()} is not useful in this case
+  because of the large number of \code{NA} entries.  The relevant
+  combinatorics are involved; an example is given
+  in~\citep{hankin2008}.  But it is interesting to consider just the
+  first column (\code{Sc}).  The \pkg{partitions}
+  package~\citep{hankin2007} can be used to show that this column
+  alone has~\code{S(rep(20,7),110)}=\Sexpr{S(rep(20,7),110)}
+  combinations; it accounts for only~7 of the~28 degrees of freedom
+  available.  Also note the large magnitude of the numbers involved;
+  the denominator of Equation~\ref{prob.of.B} is~$\simeq4.6\times
+  10^{501}$, necessitating use of the \pkg{Brobdingnag}
+  package~\citep{hankin2007c}.} so the \code{simulate.p.value} flag is
+again set:
+
+\begin{Schunk}
+  \begin{Sinput}
+> data("frogs")
+> aylmer.test(frogs, simulate.p.value=TRUE)
+  \end{Sinput}
+\end{Schunk}
+
+
+<<echo=FALSE,print=FALSE,cache=FALSE>>=
+data(frogs)
+@ 
+
+<<CalculateFrogStats, echo=FALSE, print=FALSE, cache=TRUE>>=
+frogResults <- aylmer.test(frogs, simulate.p.value=TRUE,B=2000)
+@
+
+<<printFrogStats,echo=FALSE,print=TRUE>>=
+frogResults
+@ 
+
+thus the null hypothesis may be rejected, and some form of
+non-transitive mechanism is required to explain the frogs' choices.
+\citeauthor{aoki2005}'s batch method gives ~$0.016\pm 0.004$.
+
+It is interesting to compare the approach adopted here with that
+of~\citet{kendall1940}, who considered pairwise comparison matrices of
+the form of \code{frogs.matrix}, also provided with the package:
+
+<<printFrogsMatrix>>=
+frogs.matrix
+@ 
+
+This matrix contains the same data as the \code{frogs} dataset shown
+in Table~\ref{frogs} in a more compact form (the first line of
+\code{frogs} appears as elements \code{[1,2]} and \code{[2,1]}).
+\citet{kendall1940} considered the special case of such matrices where
+each entry was~$0$ or~$1$, thus corresponding to the case where the
+female frog was presented with each pairwise choice exactly once.
+Their test counts the number of circular
+triads\footnote{Following~\cite{alway1962}, a circular triad is a
+  triple of stimuli~$A$, $B$, $C$ with either~$A\rightarrow
+  B\rightarrow C\rightarrow A$ or~$A\rightarrow C\rightarrow
+  B\rightarrow A$.}  appearing in the table; the asymptotic
+distribution of this statistic is known under the null which gives a
+critical region.  \citet{knezek1998} noted that the test was
+``computationally intense''---the complexity rising as~${\mathcal
+  O}(2^{k!})$---and presented an asymptotic approximation.
+
+We suggest that our test is not directly comparable to that
+of~\citeauthor{kendall1940} (it is clear that our test fails to reject
+{\em any} board whose elements are all zero or one) but further work
+would be required to explore any relationship.  
+
+\subsection{One-tailed and two-tailed tests in pairwise comparison}
+
+The general problem of comparing~$n$ players~$p_1,\ldots,p_n$
+potentially has~$n(n-1)/2$ pairwise comparisons.  The system of
+players and possible comparisons may be represented as a
+graph~\citep{bollobas1979}; two nodes (players) are connected by an
+edge if and only if they compete against one another.
+
+If the only comparisons that may be made are between~$p_i$
+and~$p_{i+1}$ for~$1\leqslant i\leqslant n-1$ (and between~$p_1$
+and~$p_n$), then the competition graph becomes cyclic.  The sample
+space possesses a natural ordering, because the board has only a
+single degree of freedom, and one-sided tests become possible.  A
+succinct overview of one-sided and two-tailed tests in the context of
+two by two contingency tables is given by~\cite{ghent1972}.
+
+When considering~\twobytwo\ contingency tables~\citep{agresti2002}, one
+often considers the \emph{odds ratio}~$\theta$ defined as
+\[
+\theta=
+\frac{\pi_1/(1-\pi_1)}{\pi_2/(1-\pi_2)}
+\]
+where~$\pi_1$ and~$\pi_2$ are the binomial probabilities of the first
+and second rows respectively [the \emph{odds} of an event with
+  probability~$\pi$ are defined to be~$\pi/(1-\pi)$] .  The maximum
+likelihood estimate for the odds ratio is given
+by~$\hat{\theta}=\frac{ad}{bc}$.
+
+Tables~\ref{chess}, \ref{ordered_sample_space} and~\ref{gear_teeth}
+immediately suggest a generalization of the odds ratio, which is the
+product of the odds of each edge in the competition graph
+[\code{odds.ratio()} in the package]: if the data is organized as in
+these boards, the generalized odds ratio is given by the product of
+the elements on the leading diagonal, divided by the product of the
+off-diagonal elements.  In the case of Table~\ref{chess}, the maximum
+likelihood estimate for the generalized odds ratio would
+be~$\frac{22\cdot 23\cdot 10}{13\cdot 12\cdot 8}\simeq 4.04$, and in
+Table~\ref{gear_teeth} it is~$\simeq0.00638$.
+
+The generalized odds ratio thus furnishes a natural ordering of a
+sample space: simply order the sample space from lowest generalized
+odds ratio to largest; Table~\ref{ordered_sample_space} enumerates a
+small sample space and illustrates how the ordering works.
+
+The simplest nontrivial example of pairwise comparison would be to
+consider three players A, B, and C who compete in pairs.  This case
+was considered by~\citet{bradley1954}, although the test presented was
+asymptotic, and not exact.  Triads of players with Player~A beating~B,
+player~B beating~C {\em and} player~C beating~A certainly exist
+(Table~\ref{chess} shows a real example, taken from the chess world).
+Such players form a circular triad in the sense of~\citet{knezek1998}
+but here we allow {\em repeated} comparisons (matches).
+
+
+\begin{table}
+\centering
+\begin{tabular}{|ccc|c|}\hline
+Topalov  & Anand & Karpov & total\\ \hline
+22 & 13 & -  & 35\\ 
+-  & 23 & 12 & 34\\ 
+8  &  -  & 10 & 18 \\ \hline
+30 & 36 & 22 & 87 \\ \hline
+\end{tabular}
+\caption{Intransitive \label{chess} example of chess players (dataset
+  \code{chess} in the package);  entries show number of games won
+  up to 2001 (draws are discarded).  Topalov beats Anand 22-13; Anand
+  beats Karpov 23-12; and Karpov beats Topalov 10-8.  Games between
+  these three players thus resemble a noisy version of iterated
+  ``rock-paper-scissors''}
+\end{table}
+
+Further examples are found in biology: male side-blotched lizards are
+territorial and possess three variants (yellow, orange, blue).
+Territory held by~Y is lost to~O, territory held by~O is lost to~B,
+and territory held by~B is lost to~Y~\citep{sinervo1996}.  Competition
+between these three morphs is thus a noisy version of
+``rock-paper-scissors''~\citep{wiki:rps}, a system encountered in
+diverse scientific contexts including population
+ecology~\citep{frean2001}, game theory~\citep{szabo2007}, and
+sociology~\citep{semmann2003}.
+
+In these examples, non-transitivity often has a plausible mechanism,
+whose existence serves as an alternative hypothesis and indicates a
+one-tailed test; this would be a generalization of the one-tailed
+Fisher's exact test for the~\twobytwo\ case.  In the case of the
+side-blotched lizard, O beats~Y through aggression, B beats~O through
+concentrating on defending only a small territory, and~Y beats~B
+through stealth.
+
+In many branches of engineering, one encounters systems which comprise
+components arranged in a circular configuration.  Each component may
+be compared only against the two adjacent
+components~\citep{hankin2007b}.  Commonly occurring examples include
+turbine blades, ball bearings, and gear teeth.  The comparisons might
+involve objective measurements---such as turbine blade lengths---or
+subjective quantities, such as amount of wear.  It is desired to
+determine whether the measurement system possesses a `handedness', in
+that (for example), the clockwise blade is judged to be longer more
+frequently than reasonable.  Table~\ref{gear_teeth} shows an example
+taken from the field of aviation quality control; it is given in the
+\pkg{aylmer} package as the \code{gear} dataset:
+
+<<>>=
+data(gear) # Table 6
+aylmer.test(gear)
+@ 
+
+<<calcGear,echo=FALSE,print=FALSE>>=
+jj <- aylmer.test(gear,alternative="less")$p.value
+jj <- round(jj*1e8)/1e3
+@ 
+
+showing that a two sided test is not significant at the~$5\%$ level,
+although it is interesting to observe that the one-sided test has a
+p-value of about~$\mbox{\Sexpr{jj}}\times 10^{-5}$.  Note the natural
+one-sidedness of any significance test of this type: the preference
+may be clockwise or anticlockwise, corresponding to high or low values
+of the odds ratio.
+
+\begin{table}
+  \centering
+  \mbox{
+\begin{tabular}{|cccc|}\hline
+A&B&C&D\\ \hline
+ 0       & 3       & -       & -    \\ 
+ -       & 3       & 9       & -    \\ 
+ -       & -       & 1       & 4    \\ 
+ 4       & -       & -       & 3    \\ \hline
+\end{tabular}
+\,
+\begin{tabular}{|cccc|}\hline
+A&B&C&D\\ \hline
+ 1       & 2       & -       & -    \\ 
+ -       & 4       & 8       & -    \\ 
+ -       & -       & 2       & 3    \\ 
+ 3       & -       & -       & 4    \\ \hline
+\end{tabular}
+\,
+\begin{tabular}{|cccc|}\hline
+A&B&C&D\\ \hline
+ 2       & 1       & -       & -    \\ 
+ -       & 5       & 7       & -    \\ 
+ -       & -       & 3       & 2    \\ 
+ 2       & -       & -       & 5    \\ \hline
+\end{tabular}
+\,
+\begin{tabular}{|cccc|}\hline
+A&B&C&D\\ \hline
+3       & 0       & -       & -    \\ 
+-       & 6       & 6       & -    \\ 
+-       & -       & 4       & 1    \\ 
+1       & -       & -       & 6    \\ \hline
+\end{tabular}
+}
+\caption{An ordered sample space.  Rows show the result of repeated
+  pairwise comparisons of four\label{ordered_sample_space} players,
+  A-B, B-C, C-D, D-A.  Marginal totals are held constant.  From left
+  to right, the generalized odds ratios are~$0, \frac{2}{9},
+  \frac{75}{14}, \infty$.  Suppose the first board were the
+  observation and the null hypothesis is to be tested against the
+  (one-sided) alternative hypothesis that the odds ratio is smaller
+  than that observed: in practice, this would be conceptualized
+  as~$A\rightarrow B\rightarrow C\rightarrow D\rightarrow A$, where
+  ``$X\rightarrow Y$'' means that the probability of~$X$ beating~$Y$
+  exceeds~$0.5$.  Note that all four scorelines are consistent with
+  the alternative hypothesis.  Then the one-sided p-value would
+  be~$\left(\Sigma\cdot 3!^34!^29!\right)^{-1}\simeq 0.0353$
+  where~$\Sigma=\left(3!^34!^29!\right)^{-1} +
+  \left(2!^23!4!^28!\right)^{-1} + \left(2!^33!5!^27!\right)^{-1} +
+  \left(3!4!6!^2\right)^{-1}$.  The two-sided p-value would
+  be~$\frac{1}{\Sigma}\left[\left(3!^34!^29!\right)^{-1}
+    +\left(3!4!6!^2\right)^{-1}\right]\simeq 0.065$}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{|ccccccc|c|}\hline
+  \multicolumn{7}{|c|}{tooth} & \\ \hline
+    $t_1$ & $t_2$ & $t_3$ & $t_4$ & $t_5$ & $t_6$ & $t_7$ &  total\\ \hline
+       1 & 5 & - & - & - & - & - &  6 \\ 
+       - & 2 & 4 & - & - & - & - &  6 \\ 
+       - & - & 3 & 8 & - & - & - & 11 \\ 
+       - & - & - & 3 & 7 & - & - & 10 \\ 
+       - & - & - & - & 5 & 6 & - & 11 \\ 
+       - & - & - & - & - & 5 & 7 & 12 \\ 
+       6 & - & - & - & - & - & 4 & 10 \\ \hline\hline
+       7 & 7 & 7 & 11& 12& 11& 11& 68 \\ \hline
+\end{tabular}
+\caption{Engineering quality control\label{gear_teeth} results
+  (simplified) for a gear with seven teeth; dataset \code{gear} in the
+  package.  Each tooth may be compared subjectively with the two
+  adjacent teeth and the numbers indicate the number of times each one
+  is judged to be the more heavily worn.  With fixed row and column
+  totals, the board possesses one degree of freedom, although in this
+  case a two-sided test is appropriate because there is no prior
+  reason to favour a clockwise bias over an anticlockwise bias}
+\end{table}
+
+\section{Conclusions}
+
+Fisher's test is attractive because it is exact, and tests an
+interesting and plausible null hypothesis: each row comprises
+independent observations from the same multinomial distribution.  In
+this paper, we present a generalization of Fisher's exact test, with
+the same null except that the rows comprise independent {\em
+  conditional} observations from the same multinomial distribution.
+The natural null hypothesis is an interesting and useful construction
+in a variety of scientific, industrial, and sociological contexts.
+
+Throughout this paper, the ensemble considered is that of permissible
+boards.  By default, the critical set includes all permissible boards
+with conditional probabilities not exceeding that of the observation;
+the size of the test is the probability of observing a board in the
+critical set.  However, it is possible to generalize the above test by
+defining a test statistic~$t\left(\cdot\right)$ defined on permissible
+boards, and considering instead a critical set comprising
+permissible boards~$x$ with~$t(x)$ not exceeding that of the
+observation: $\left\{x: t(x)\geqslant t\left(x_{\rm
+  obs}\right)\right\}$.  This approach leads naturally to a number of
+interesting and useful tests on tables with structural zeros.
+
+The special case of a cyclic competition graph occurs naturally in a
+variety of contexts; this allows one-sided tests, and the form of the
+board immediately suggests a generalization of the odds
+ratio, which has a straightforward maximum likelihood estimate.
+
+We provide software for carrying out these statistical tests in the
+form of \pkg{aylmer}, an~\proglang{R} package that includes
+\code{aylmer.test()}, a drop-in replacement for the
+\code{fisher.test()} function that can accommodate \code{NA} entries
+representing structural zeros.
+
+\subsection*{Acknowledgements}
+We acknowledge the many stimulating and helpful comments made by the
+\proglang{R}-help list; and we thank A. M. Hankin for a sequence of
+ever-more demanding test cases which repeatedly uncovered bugs in
+earlier versions of our software.
+
+Passing a function to \code{aylmer.test()} in order to specify an
+alternative hypothesis was suggested by an anonymous JSS referee.
+\bibliography{fishergen}
+\end{document}

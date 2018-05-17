@@ -1,0 +1,19 @@
+citHeader("To cite aylmer in publications use:")
+
+citEntry(entry = "Article",
+  title        = "Exact Tests for Two-Way Contingency Tables with Structural Zeros",
+  author       = personList(as.person("Luke J. West"),
+                   as.person("Robin K. S. Hankin")),
+  journal      = "Journal of Statistical Software",
+  year         = "2008",
+  volume       = "28",
+  number       = "11",
+  url          = "http://www.jstatsoft.org/v28/i11/",
+
+  textVersion  =
+  paste("Luke J. West, Robin K. S. Hankin (2008).",
+        "Exact Tests for Two-Way Contingency Tables with Structural Zeros.",
+        "Journal of Statistical Software 28(11).",
+        "URL http://www.jstatsoft.org/v28/i11/.")
+)
+

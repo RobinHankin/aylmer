@@ -1,0 +1,47 @@
+\name{frogs}
+\alias{frogs}
+\alias{frogs.matrix}
+\docType{data}
+\title{Mating preference of frogs}
+\description{
+  A matrix with 9 columns representing different mating calls, and 36
+  rows, representing the results of repeated pairwise preference tests.
+}
+\usage{data(frogs)}
+\details{
+
+  Dataset \code{frogs.matrix} is a 9-by-9 matrix with rows and columns
+  corresponding to 9 stimuli presented to a female frog.  Entry
+  \eqn{(i,j)} corresponds to the number of times the frog preferred
+  stimulus \eqn{i}.
+
+  Dataset \code{frogs} is a 36-by-9 matrix with each row corresponding
+  to a pair of distinct stimuli [\eqn{36=9*(9-1)/2}]; if a row has
+  non-\code{NA} columns \eqn{i} and \eqn{j}, then its entries show the
+  number of times the frog preferred stimulus \eqn{i} or stimulus
+  \eqn{j}.
+
+  The first form may be converted to the second using function
+  \code{as.pairwise()}.  Note that the square matrix may have \code{NA}
+  entries off the main diagonal (some pairs did not meet).
+
+  See \code{purum.Rd} for another mating preference dataset.
+  
+}
+\seealso{\code{\link{purum}}}
+\source{
+  \itemize{
+    \item Kirkpatrick M, Rand AS, Ryan MJ (2006).  \dQuote{Mate Choice Rules in
+      Animals}, \emph{Animal Behaviour}, \bold{71}, 1215--1225
+    \item Ryan MJ, Rand AS (2003).  \dQuote{Sexual Selection in Female
+      Perceptual Space: How Female Tungara Frogs Perceive and
+      Respond to Complex Population Variation in Acoustic Mating
+      Signals} \emph{Evolution}, \bold{57}(11), 2608--2618
+  }
+}
+\examples{
+data(frogs)
+frogs.matrix
+
+}
+\keyword{datasets}
