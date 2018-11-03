@@ -16,8 +16,6 @@ jj <-
     c("NiKo","autimatic","tarik","Skadoodle","olofmeister", 
       "Stewie2k", "karrigan", "GuardiaN","rain","RUSH" )
       
-colnames(counterstrike_kills) <- jj
-rownames(counterstrike_kills) <- jj
 
 ## rearrange rows and columns so that rows 1-5 are team 1 and rows
 ## 6-10 are team 2:
@@ -26,8 +24,8 @@ rownames(counterstrike_kills) <- jj
 
 dimnames(counterstrike_kills) <-
     list(
-        killer = rownames(jj),
-        victim = colnames(jj)
+        killer = jj,
+        victim = jj
     )
 
 jj <- c(
