@@ -1,7 +1,6 @@
 #ifndef INCLUDE_app_h
 #define INCLUDE_app_h
 
-#include"board.h"
 
 
 extern "C"  void randpath      (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans, int* num   );
@@ -95,3 +94,5 @@ void prob(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int
 }
 
 #endif
+
+// example file aylmer.cpp now deleted
