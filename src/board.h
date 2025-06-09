@@ -6,6 +6,10 @@
 #include<cmath>
 #include<cstdlib>
 
+#include<R.h>
+#include<Rmath.h>
+
+
 using namespace std;
 
 namespace aylmer {
@@ -35,7 +39,9 @@ namespace aylmer {
    for(int j=0;j<n1;j++) {empty.push_back(std::pair<int,int>(i,j)); value[i][j]=--k;}
   }
 
-  int irand(int n) {return ((int)(n*(rand()/(double)RAND_MAX)))%n;}
+   int irand(int n) {
+     return (int)(n * unif_rand());
+   }
 
   int randempty(int d, int j) {
    int k=0,i=irand(count[d][j]);
@@ -318,7 +324,7 @@ namespace aylmer {
     Board c(t); 
 
     while(c.nbins()) {
-     c.increment((int)(rand()/((double)RAND_MAX)*c.nbins()));
+       c.increment((int)(unif_rand() * c.nbins()));
     }
 
     if (c.get_grand()) n++; else insert(c);
