@@ -2,8 +2,14 @@ Package: aylmer
 Type: Package
 Title: A generalization of Fisher's exact test
 Version: 1.0-15
-Date: 2018-05-17
-Author: Robin K. S. Hankin (R) and Luke J. West (C++)
+Authors@R: c(person(given = c("Robin", "K. S."),
+                    family = "Hankin", role = c("aut","cre"),
+		    email = "hankin.robin@gmail.com",
+		    comment = c(ORCID = "0000-0001-5982-0415")),
+             person(given = c("Luke", "J."),
+                    family = "West",
+                    role = "aut",
+                    comment = "C++"))
 Depends: methods, Brobdingnag, R (>= 4.1-0)
 Suggests: partitions
 Maintainer: Robin K. S. Hankin <hankin.robin@gmail.com>
