@@ -1,6 +1,6 @@
 Package: aylmer
 Type: Package
-Title: A Generalization of Fisher's exact test
+Title: A Generalization of Fisher's Exact Test
 Version: 1.0-15
 Authors@R: c(person(given = c("Robin", "K. S."),
                     family = "Hankin", role = c("aut","cre"),
