@@ -25,6 +25,9 @@
   \code{as.pairwise()}.  Note that the square matrix may have \code{NA}
   entries off the main diagonal (some pairs did not meet).
 
+  These datasets are created by file \code{inst/frogs.R}, which makes
+  file \code{frogs.rda}.
+
   See \code{purum.Rd} for another mating preference dataset.
   
 }
@@ -42,6 +45,5 @@
 \examples{
 data(frogs)
 frogs.matrix
-
 }
 \keyword{datasets}

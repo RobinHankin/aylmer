@@ -1,4 +1,4 @@
-require("aylmer",quietly=TRUE)
+require("aylmer", quietly=TRUE)
 
 "frogs.matrix" <-
   matrix(c(
@@ -11,10 +11,15 @@ require("aylmer",quietly=TRUE)
            16L, 19L, 12L, 16L, 10L, 14L,  NA,  5L,  8L,
            15L, 15L, 12L, 16L, 12L,  9L, 15L,  NA, 13L,
            17L, 16L, 18L, 11L, 18L, 11L, 12L,  7L,  NA
-           ),9,9,byrow=TRUE)
+           ), 9, 9, byrow=TRUE)
 
 rownames(frogs.matrix) <- 
 c("Sc", "Sb", "Ob", "Oa", "Oc", "Sa", "Sd", "Od", "M")
 colnames(frogs.matrix) <- rownames(frogs.matrix)
 
 frogs <- as.pairwise(frogs.matrix)
+
+## Following lines create `frogs.rda`, residing in the `data/`
+## directory of the package.
+
+save(frogs, frogs.matrix, file="frogs.rda")
