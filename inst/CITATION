@@ -8,7 +8,7 @@ citEntry(entry = "Article",
   year         = "2008",
   volume       = "28",
   number       = "11",
-  url          = "http://www.jstatsoft.org/v28/i11/",
+  url          = "https://www.jstatsoft.org/v28/i11/",
 
   textVersion  =
   paste("Luke J. West, Robin K. S. Hankin (2008).",

@@ -15,8 +15,7 @@ paper beats (wraps up) rock.
 }
 \references{
   \itemize{
-    \item \url{http://en.wikipedia.org/wiki/Rock_paper_scissors}
-    }
+    \item\url{https://en.wikipedia.org/wiki/Rock_paper_scissors}}
 }
 \examples{
 data(rps)

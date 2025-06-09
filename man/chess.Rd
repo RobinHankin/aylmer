@@ -26,9 +26,7 @@ The games thus resemble a noisy version of \dQuote{rock paper scissors}.
 }
 \seealso{\code{\link{rps}}}
 \references{
-  \itemize{
-    \item \url{http://www.chessbase.com/}
-  }
+  \itemize{\item \url{https://en.chessbase.com/}}
 }
 \examples{
 data(chess)
