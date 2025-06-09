@@ -14,7 +14,7 @@ extern "C"  void          prob (int* row, int* nrow, int* col, int* ncol, int* b
 
 // On entry, nval contains the number of attempts
 // On exit , nval contains the length of the loop (0 means failure to find a loop)
-void randpath(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* ans, int* num) {
+extern "C" void randpath(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* ans, int* num) {
  aylmer::Board board(row,*nrow,col,*ncol,blank,*nblank);
 
 /*
@@ -36,7 +36,8 @@ void randpath(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,
  */
 }
 
-void numboards(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* ans) {
+
+extern "C" void numboards(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* ans) {
  aylmer::     Board  board(row,*nrow,col,*ncol,blank,*nblank);
  aylmer::QuickBoards boards;
 
@@ -45,7 +46,7 @@ void numboards(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank
  *ans=boards.size();
 }
 
-void allboards(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* ans, int* nval) {
+extern "C" void allboards(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* ans, int* nval) {
  aylmer::     Board  board(row,*nrow,col,*ncol,blank,*nblank);
  aylmer::QuickBoards boards;
 
@@ -73,7 +74,7 @@ void randboards(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblan
  for(int ir=0;ir<*nrow;ir++) ans[i++]=iv->first.get_value(ir,ic);
 }
 
-void allboardprobs(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, double* ans, int* nval) {
+extern "C" void allboardprobs(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, double* ans, int* nval) {
  aylmer::     Board  board(row,*nrow,col,*ncol,blank,*nblank);
  aylmer::QuickBoards boards;
 

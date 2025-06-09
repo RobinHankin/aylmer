@@ -1,5 +1,7 @@
 exportPattern("^[^\\.]")
-useDynLib(aylmer)
+useDynLib(aylmer, .registration = TRUE)
+
+
 import(methods)
 import("Brobdingnag")
 
