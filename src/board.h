@@ -40,7 +40,10 @@ namespace aylmer {
   }
 
    int irand(int n) {
-     return (int)(n * unif_rand());
+     GetRNGstate();
+     int result = (int)(n * unif_rand());
+     PutRNGstate();
+     return result;
    }
 
   int randempty(int d, int j) {
@@ -323,9 +326,11 @@ namespace aylmer {
    while(n--) {
     Board c(t); 
 
+    GetRNGstate();
     while(c.nbins()) {
        c.increment((int)(unif_rand() * c.nbins()));
     }
+    PutRNGstate();
 
     if (c.get_grand()) n++; else insert(c);
    }
