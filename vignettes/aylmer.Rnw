@@ -13,7 +13,7 @@
 
 %% just as usual
 \author{Luke J. West\\National Oceanography Centre, Southampton\And
-  Robin K. S. Hankin\\Auckland University of Technology}
+  Robin K. S. Hankin\\University of Stirling}
 \title{Exact tests for two-way contingency tables with structural zeros}
 %\VignetteIndexEntry{A vignette for the aylmer package}
 %% for pretty printing and a nice hypersummary also set:
