@@ -1,10 +1,13 @@
 \name{allboards}
 \alias{allboards}
+\alias{allboards_c}
 \alias{allboardprobs}
 \alias{allprobs}
 \alias{no.of.boards}
 \alias{is.1dof}
 \alias{maxlike}
+\alias{numboards}
+\alias{randpath}
 \alias{board-class}
 \title{Various board functionality}
 \description{
@@ -22,6 +25,8 @@ allboards(x, n = 1e5, func=NULL)
 allprobs(x, n = 1e5, normalize=TRUE, give.log=FALSE, use.C=TRUE)
 is.1dof(x)
 maxlike(x)
+numboards(x)
+randpath(x)
 }
 \arguments{
   \item{x}{Matrix, coerced to integer.  Usually with one or more
@@ -46,7 +51,8 @@ maxlike(x)
   non-negative entries that have the same marginal totals as \code{x}
   and structural zeros where \code{x} has \code{NA} entries (that is,
   \dfn{permissible boards}).  Function \code{allboards()} enumerates
-  such boards.
+  such boards (\code{allboards_c} is the \proglang{C} routine, not
+  intended for the end user).
 
   Function \code{prob(x)} returns a number proportional to the
   probability of observing \code{x}, given the structural zeros and

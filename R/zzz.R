@@ -19,7 +19,7 @@ return(out)
   n <-  no.of.boards(x,n=n)
 
   flash <- 
-    c("allboards",
+    c("allboards_c",
       .Cargs(x),
       list(out=integer(length(x) * n)),
       as.integer(n),

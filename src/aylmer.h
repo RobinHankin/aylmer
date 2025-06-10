@@ -5,7 +5,7 @@
 
 extern "C"  void randpath      (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans, int* num   );
 extern "C"  void  numboards    (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans             );
-extern "C"  void  allboards    (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans, int* nval  );
+extern "C"  void  allboards_c  (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans, int* nval  );
 extern "C"  void randboards    (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans, int* nval  );
 extern "C"  void  allboardprobs(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         double*ans, int* nval  ); // rksh calls nval, 'B'
 extern "C"  void randboardprobs(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         double*ans, int* nval  ); // rksh calls nval, 'B'
@@ -46,7 +46,7 @@ extern "C" void numboards(int* row, int* nrow, int* col, int* ncol, int* blank, 
  *ans=boards.size();
 }
 
-extern "C" void allboards(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* ans, int* nval) {
+extern "C" void allboards_c(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* ans, int* nval) {
  aylmer::     Board  board(row,*nrow,col,*ncol,blank,*nblank);
  aylmer::QuickBoards boards;
 

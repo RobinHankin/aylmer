@@ -23,7 +23,7 @@ extern "C" {
 #ifdef __cplusplus
 extern "C" {
 #endif
-  void allboards(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* ans, int* nval);
+  void allboards_c(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* ans, int* nval);
 #ifdef __cplusplus
 }
 #endif
@@ -40,7 +40,7 @@ extern "C" {
 static const R_CMethodDef CEntries[] = {
     {"numboards"    , (DL_FUNC) &numboards    , 7},
     {"allboardprobs", (DL_FUNC) &allboardprobs, 8},
-    {"allboards"    , (DL_FUNC) &allboards    , 8},
+    {"allboards_c"  , (DL_FUNC) &allboards_c  , 8},
     {"randpath"     , (DL_FUNC) &randpath     , 8},
     {NULL, NULL, 0}
 };
