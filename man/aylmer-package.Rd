@@ -2,23 +2,16 @@
 \alias{aylmer-package}
 \alias{aylmer}
 \docType{package}
-\title{A Generalization of Fisher's exact test}
-\description{
-  A Generalization of Fisher's exact test
-}
+\title{\packageTitle{aylmer}}
+\description{\packageDescription{aylmer}}
 \details{
-\tabular{ll}{
-Package: \tab aylmer\cr
-Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2007-10-11\cr
-License: \tab GPL-2
-}
+  \packageDESCRIPTION{aylmer}
+  \packageIndices{aylmer}
 }
 \author{
 Robin K. S. Hankin (\R) and Luke G. West (C++)
 
-Maintainer: <hankin.robin@gmai.com>
+Maintainer: <hankin.robin@gmail.com>
 }
 \references{
   \itemize{
@@ -33,6 +26,9 @@ Maintainer: <hankin.robin@gmai.com>
       Coefficients}.  American Midland Naturalist, 88(1):15-27
     \item R. K. S. Hankin 2007. \emph{Very Large Numbers in \R:
       Introducing Package Brobdingnag}.  \R News 3(3):15-16
+    \item R. K. S. Hankin and L. J. West 2006. \emph{Exact Tests for
+      Two-Way Contingency Tables with Structural Zeros}.  Journal of
+    Statistical Software 28(11). \url{https://www.jstatsoft.org/v28/i11/}
   }
 }
 \keyword{ package }
