@@ -40,9 +40,7 @@ namespace aylmer {
   }
 
    int irand(int n) {
-     GetRNGstate();
      int result = (int)(n * unif_rand());
-     PutRNGstate();
      return result;
    }
 
@@ -54,7 +52,7 @@ namespace aylmer {
 
    return k;
   }
-
+ 
  public:
   Board(int* row, int nrow, int* col, int ncol, int* blank, int nblank):value(nrow),grand(0) {
    init(nrow,ncol);

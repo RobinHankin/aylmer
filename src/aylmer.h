@@ -15,6 +15,7 @@ extern "C"  void          prob (int* row, int* nrow, int* col, int* ncol, int* b
 // On entry, nval contains the number of attempts
 // On exit , nval contains the length of the loop (0 means failure to find a loop)
 extern "C" void randpath(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* ans, int* num) {
+  GetRNGstate();
  aylmer::Board board(row,*nrow,col,*ncol,blank,*nblank);
 
 /*
@@ -34,6 +35,7 @@ extern "C" void randpath(int* row, int* nrow, int* col, int* ncol, int* blank, i
  for(int j=0;j<*ncol;j++) if (!ans[i+*nrow*j]) cout << ".\t"; else cout << ans[i+*nrow*j] << "\t"; cout << "\n";
  }
  */
+  PutRNGstate();
 }
 
 
@@ -62,6 +64,7 @@ extern "C" void allboards_c(int* row, int* nrow, int* col, int* ncol, int* blank
 }
 
 void randboards(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int   * ans, int* nval  ) {
+ GetRNGstate();
  aylmer::      Board  board(row,*nrow,col,*ncol,blank,*nblank);
  aylmer::RandomBoards boards;
 
@@ -72,6 +75,9 @@ void randboards(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblan
  for(aylmer::Boards::Boards_i iv=boards.begin();n>0;n--,iv++)
  for(int ic=0;ic<*ncol;ic++) 
  for(int ir=0;ir<*nrow;ir++) ans[i++]=iv->first.get_value(ir,ic);
+
+PutRNGstate();
+
 }
 
 extern "C" void allboardprobs(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, double* ans, int* nval) {
