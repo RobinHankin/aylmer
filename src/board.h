@@ -64,7 +64,7 @@ namespace aylmer {
   Board(int n0, int n1):value(n0),grand(0) {init(n0,n1);}
 
   static double getflog(int n) {
-   if (n>=flog.size()) {
+    if (static_cast<size_t>(n) >= flog.size()) {
     for(int i=flog.size();i<=n;i++) flog.push_back(flog.back()+log((double)i));
    }
 
@@ -144,7 +144,7 @@ namespace aylmer {
   int  get_total (int i)  const {int v[]={total[0][empty[i].first],total[1][empty[i].second]}; return v[0]<v[1]?v[0]:v[1];}
   int  get_count (int i)  const {int v[]={count[0][empty[i].first],count[1][empty[i].second]}; return v[0]<v[1]?v[0]:v[1];}
   int  get_index ()       const {
-   int b=0; for(int i=1;i<size();i++) if (get_count(i)<get_count(b)||(get_count(i)==get_count(b)&&get_total(i)<get_total(b))) b=i; return b;
+    int b=0; for(int i=1 ; i < static_cast<int>(size()) ; i++) if (get_count(i)<get_count(b)||(get_count(i)==get_count(b)&&get_total(i)<get_total(b))) b=i; return b;
   }
 
   int  get_grand ()       const {return grand;}
@@ -230,14 +230,14 @@ namespace aylmer {
      }
     } while((path[0].back()!=start[0])||(path[1].back()!=start[1]));
 
-    for(int i=0;i<path[0].size()-1;i++) ans[path[0][i]+dim[0]*path[1][i]]+=2*(i&1)-1;
+    for(size_t i=0;i<path[0].size()-1;i++) ans[path[0][i]+dim[0]*path[1][i]]+=2*(i&1)-1;
 
     again=false; for(int i=0;i<dim[0]*dim[1]       ;i++) {if (brd[i]+ans[i]<0) {again=true; break;}} if (again) continue;
     again=true ; for(int i=0;i<dim[0]*dim[1]&&again;i++)  if (       ans[i]  )  again=false;         if (again) continue;
    }
 
-   if (again) for(int i=0;i<brd.size();i++) ans[i] =brd[i]; else
-              for(int i=0;i<brd.size();i++) ans[i]+=brd[i];
+   if (again) for(size_t i=0;i<brd.size();i++) ans[i] =brd[i]; else
+              for(size_t i=0;i<brd.size();i++) ans[i]+=brd[i];
 
    n=again?0:n-num;
   }
