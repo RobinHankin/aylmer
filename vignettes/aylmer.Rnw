@@ -84,7 +84,7 @@ ignore <- require(partitions,quietly=TRUE)
 
 Fisher's exact test~\citep[page 96]{fisher1954} tests
 \twobytwo\ contingency tables for equality of proportion: under the
-null, the two rows are repeated Bernoulli trials with the same
+null, the two rows tabulate repeated Bernoulli trials with the same
 probability of success and failure.  It is straightforward to
 generalize the test to larger tables~\citep{freeman1951}.
 
@@ -1028,7 +1028,7 @@ critical set.  However, it is possible to generalize the above test by
 defining a test statistic~$t\left(\cdot\right)$ defined on permissible
 boards, and considering instead a critical set comprising
 permissible boards~$x$ with~$t(x)$ not exceeding that of the
-observation: $\left\{x: t(x)\geqslant t\left(x_{\rm
+observation: $\left\{x\colon t(x)\geqslant t\left(x_{\rm
   obs}\right)\right\}$.  This approach leads naturally to a number of
 interesting and useful tests on tables with structural zeros.
 
