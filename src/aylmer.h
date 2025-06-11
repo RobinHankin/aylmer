@@ -2,15 +2,15 @@
 #define INCLUDE_app_h
 
 
-
-extern "C"  void randpath      (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans, int* num   );
-extern "C"  void  numboards    (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans             );
-extern "C"  void  allboards_c  (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans, int* nval  );
-extern "C"  void randboards    (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans, int* nval  );
-extern "C"  void  allboardprobs(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         double*ans, int* nval  ); // rksh calls nval, 'B'
-extern "C"  void randboardprobs(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         double*ans, int* nval  ); // rksh calls nval, 'B'
-extern "C"  void          prob (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* x, double*ans             ); // rksh calls nval, 'B'
-
+extern "C" {
+  void randpath      (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans, int* num   );
+  void  numboards    (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans             );
+  void  allboards_c  (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans, int* nval  );
+  void randboards    (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         int   *ans, int* nval  );
+  void  allboardprobs(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         double*ans, int* nval  ); // rksh calls nval, 'B'
+  void randboardprobs(int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank,         double*ans, int* nval  ); // rksh calls nval, 'B'
+  void          prob (int* row, int* nrow, int* col, int* ncol, int* blank, int* nblank, int* x, double*ans             ); // rksh calls nval, 'B'
+}
 
 // On entry, nval contains the number of attempts
 // On exit , nval contains the length of the loop (0 means failure to find a loop)
