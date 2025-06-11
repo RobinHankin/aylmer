@@ -1,9 +1,6 @@
 #include"board.h"
 #include"aylmer.h"
 
-//#include<iostream>
-#include<vector>
-
 
 namespace aylmer {
 

@@ -1,6 +1,4 @@
-#include <R.h>
 #include <Rinternals.h>
-#include <R_ext/Rdynload.h>
 
 // Declare the function prototype (must match your definition)
 

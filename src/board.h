@@ -1,16 +1,9 @@
-//#include<iostream>
 #include<vector>
 #include<deque>
 #include<map>
-#include<cassert>
-#include<cmath>
-#include<cstdlib>
 
 #include<R.h>
-#include<Rmath.h>
 
-
-using namespace std;
 
 namespace aylmer {
 
