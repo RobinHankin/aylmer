@@ -35,6 +35,16 @@ chance.
 data(gear)
 is.1dof(gear)
 aylmer.test(gear)
-aylmer.test(gear,alternative="less")
+aylmer.test(gear, alternative="less")
+
+plot(allprobs(gear,normalize = FALSE), type = 'h', lwd = 4,
+     col = c("red","red","black","black","red","red"))
+legend("topright", col = c("black","red"),
+       lty = 1, lwd = 4, pch = NA,
+       legend = c("less than observed", "greater than observed"))
+abline(h=exp(prob(gear)))
+
+
 }
 \keyword{datasets}
+
