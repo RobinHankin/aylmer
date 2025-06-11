@@ -47,4 +47,3 @@ abline(h=exp(prob(gear)))
 
 }
 \keyword{datasets}
-
