@@ -1051,5 +1051,5 @@ earlier versions of our software.
 
 Passing a function to \code{aylmer.test()} in order to specify an
 alternative hypothesis was suggested by an anonymous JSS referee.
-\bibliography{fishergen}
+\bibliography{aylmer}
 \end{document}
