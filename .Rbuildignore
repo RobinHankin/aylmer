@@ -2,6 +2,7 @@
 ^\.Rproj\.user$
 ^README\.Rmd
 ^\.travis\.yml$
+^inst/counterstrike.Rmd$
 ^.github$
 ^.devcontainer$
 ^CODE_OF_CONDUCT.md$

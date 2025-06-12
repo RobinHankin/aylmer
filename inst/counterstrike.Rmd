@@ -1,0 +1,100 @@
+---
+title: "Counterstrike"
+author: "R. K. S. Hankin"
+output: bookdown::html_document2
+bibliography: aylmer.bib
+---
+
+
+
+```{r setup, include=FALSE}
+set.seed(0)
+knitr::opts_chunk$set(echo = TRUE)
+library("aylmer")
+```
+
+To cite the `aylmer` package in publications, please use @west2008.
+The data is taken from an influential match between "FaZe Clan" and
+"Cloud9", two of the most successful E-sports syndicates of all time,
+when they competed at Boston 2018.  More background information on the
+dataset and its source is given at `counterstrike.Rd` of the `hyper2`
+package [@hankin2017_rmd].  This short document discusses a dataset
+taken from Boston 2018.  It was provided by Zachary Hankin.
+
+
+```{r zacskills}
+counterstrike_kills <- matrix(c(
+    0, 4, 4, 6, 0,10, 0, 0, 0, 3, 
+    7, 0, 0, 0, 6, 0, 4, 4, 7, 0, 
+    9, 0, 0, 0, 5, 0, 7, 5, 9, 0, 
+    5, 0, 0, 0, 6, 0,10, 8, 2, 0, 
+    0, 7, 3, 5, 0, 6, 0, 0, 0, 6, 
+    7, 0, 0, 0, 7, 0, 8, 4, 6, 0, 
+    0, 4, 2, 4, 0, 6, 0, 0, 0, 8, 
+    0, 6,12, 4, 0, 3, 0, 0, 0, 3, 
+    0, 4, 3, 3, 0, 3, 0, 0, 0, 4, 
+    0, 0, 0, 0, 4, 0, 2, 6, 6, 0
+), 10, 10, byrow=TRUE)
+
+players <- 
+    c("NiKo","autimatic","tarik","Skadoodle","olofmeister", 
+      "Stewie2k", "karrigan", "GuardiaN","rain","RUSH" )
+      
+
+## rearrange rows and columns so that rows 1-5 are team 1 and rows
+## 6-10 are team 2:
+## team1: autimatic,tarik, Skadoodle,Stewie2k,RUSH
+## team2: NiKo,olofmeister,karrigan,GuardiaN,rain
+
+dimnames(counterstrike_kills) <-
+    list(
+        killer = players,
+        victim = players
+    )
+
+jj <- c(
+    2,3,4,6,10,   # team 1
+    1,5,7,8,9     # team 2
+)
+
+counterstrike_kills <- counterstrike_kills[jj,jj]
+
+## Because shooting members of your own team is forbidden, create
+## structural zeros
+
+jj <- as.matrix(expand.grid(1:5,1:5))
+counterstrike_kills[jj  ,jj  ] <- NA
+counterstrike_kills[jj+5,jj+5] <- NA
+
+
+counterstrike_kills
+```
+
+
+OK now the original thinking was that the structural zeros indicated
+the Aylmer test.  But on reflection, any member of one team can kill
+any member of the other.  So it might be better to consider the "kill
+matrix" with rows being team A, columns being team B, and entry
+$(i,j)$ being number of times player $i$ of team A kills player $j$ of
+team B.  We have symmetry between the teams so can create two
+matrices:
+
+
+```{r}
+(cloud9_kills_faze <- counterstrike_kills[1:5 ,6:10])
+(faze_kills_cloud9 <- counterstrike_kills[6:10,1:5 ])
+```
+
+
+Now test for homogeneity of proportions between the rows using Fisher:
+
+```{r}
+fisher.test(cloud9_kills_faze, simulate.p.value = TRUE)
+fisher.test(faze_kills_cloud9, simulate.p.value = TRUE)
+```
+
+
+No evidence either way.
+
+
+# References {-}
