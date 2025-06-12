@@ -13,7 +13,7 @@ Classification of son-father status
 Data collected by Glass: social status of son cross-classified with
 status of father.
 
-Dataset \code{glass.al} includes all the original data; dataset
+Dataset \code{glass.all} includes all the original data; dataset
 \code{glass} has the diagonal set to \code{NA}, thus restricting the
 sample to those pairs where the father's status is different from that
 of the son's.
@@ -58,7 +58,7 @@ aylmer.test(a , alternative=f)
 
 # Now the real dataset:
 data(glass)
-aylmer.test(glass , alternative=f, simulate.p.value=TRUE , B=100)
+aylmer.test(glass, alternative=f, simulate.p.value=TRUE , B=100)
 
 # p-value of about 0.975 means that most boards have f(random.board) >
 # f(observed.board).  In this case, f() is the number of climbers.  The
