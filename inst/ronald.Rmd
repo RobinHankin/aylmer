@@ -1,0 +1,164 @@
+---
+title: The Ronald test"
+author: "R. K. S. Hankin"
+output: bookdown::html_document2
+bibliography: aylmer.bib
+---
+
+
+```{r setup, include=FALSE}
+set.seed(1)
+knitr::opts_chunk$set(echo = TRUE)
+library("aylmer")
+```
+
+
+To cite the `aylmer` package in publications, please use
+@west2008.  Here I consider pairwise comparisons with a
+home-ground advantage and wish to assess whether all teams have the same degree of home advantage.
+
+# Start simple: two teams {-}
+
+
+```{r,echo=FALSE}
+jj <- matrix(c(NA, 7+2i ,6+5i, NA),2,2,byrow=TRUE)
+teams <- LETTERS[1:2]
+dimnames(jj) <- list("@home" = teams,"@away"=teams)
+dimnames(jj) <- list("@home" = teams,"@away"=teams)
+print(jj)
+```
+
+Above we see that A played at home 9 times, winning 7 and losing 2
+[row 1 column 2 is $7+2i$]; B played at home 11 times, winning 6 and
+losing 5 [row 2 column 1 is $6+5i$] (observe that the real components
+correspond to home wins and the imaginary components correspond to
+away wins.  Thus A wins 7 times at home and 5 times away).  In its
+most general form, the $2\times 2$ result matrix would be
+
+$$
+\begin{bmatrix}
+-&\alpha+\beta i \\
+\gamma + \delta i&-\\
+\end{bmatrix}
+$$
+
+
+```{r,label=try2x2}
+M <- matrix(c(
+    NA, 5+1i, 9+2i, NA),
+    nrow=2,ncol=2,byrow=TRUE)
+teams <- LETTERS[seq_len(2)]
+dimnames(M) <- list("@home" = teams,"@away"=teams)
+dimnames(M) <- list("@home" = teams,"@away"=teams)
+M
+```
+
+## Four teams
+
+Now a more complicated example, a
+modified version of the 4x4 matrix on `home_advantage.Rmd`:
+
+
+```{r label=definehomeawaymatrix}
+home_games_won <- matrix(c(
+    NA, 16, 12, 11,
+    19, NA, 19, 16,
+    17, 12, NA, 11,
+    11, 12, 12, NA),
+    nrow=4,ncol=4,byrow=TRUE)
+
+away_games_won <- matrix(c(
+    NA, 05, 02, 02,
+     9, NA, 10, 02,
+     3, 04, NA, 07,
+     8, 06, 04, NA),
+    nrow=4,ncol=4,byrow=TRUE)
+
+teams <- LETTERS[1:4]
+dimnames(home_games_won) <- list("@home" = teams,"@away"=teams)
+dimnames(away_games_won) <- list("@home" = teams,"@away"=teams)
+
+D <- home_games_won + 1i*away_games_won
+D
+```
+
+Above we see, from row 1 column 2 [`36+10i`], that A played at home
+against B a total of $36+10=46$ times, winning $36$ and losing $10$;
+From row 2 column 1 [`11+10i`] we see that B played at home against A
+a total of 21 times, winning 11 and losing 10. 
+
+We will enumerate all arrays with fixed inline sums:
+
+```{r}
+no.of.boards(away_games_won)
+```
+
+```{r cache=TRUE}
+agw <- allboards(away_games_won)  # every possible result with consistent marginals
+dim(agw)
+hgw <- -sweep(agw, 1:2, home_games_won + away_games_won)
+hgw[,,1:3]
+wanted <- apply(hgw,3,function(x){all(x >= 0, na.rm=TRUE)})
+table(wanted)
+```
+
+Above we see that every board congruent to [that is, marginal totals
+matching] `away_games_won` (viz `agw`) leads to a non-negative board
+for `home_games_won`.
+
+```{r}
+test_statistic <- 1/prod(factorial(c(home_games_won,away_games_won)),na.rm=TRUE)
+f <- function(x){1/prod(factorial(x),na.rm=TRUE)}
+resampled_probs <- apply(agw,3,f) * apply(hgw,3,f)
+hist(log(resampled_probs))
+plot(log(resampled_probs),cex=0.2)
+abline(h = log(test_statistic))
+pvalue <- sum(resampled_probs[resampled_probs < test_statistic]) / sum(resampled_probs)
+pvalue
+```
+
+So for this statistic we have no evidence to reject the null of the
+same home advantage for all teams.  Now I will modify the data so
+there is a significant difference:
+
+```{r}
+home_games_won[] <- 3
+away_games_won[] <- 3
+diag(home_games_won) <- NA
+diag(away_games_won) <- NA
+home_games_won[1,3] <- 19
+home_games_won[3,1] <- 0
+away_games_won[1,3] <- 0
+away_games_won[3,1] <- 19
+home_games_won
+away_games_won
+no.of.boards(away_games_won)
+```
+
+```{r}
+agw <- allboards(away_games_won)  # every possible result with consistent marginals
+dim(agw)
+hgw <- -sweep(agw, 1:2, home_games_won + away_games_won)
+wanted <- apply(hgw,3,function(x){all(x >= 0, na.rm=TRUE)})
+table(wanted)
+```
+
+Above we see from the table that XXX of the possible tables for
+`away_games_won` are forbidden, for they yield negative entries in the
+`home_games_won` results.
+
+```{r}
+hgw <- hgw[,,wanted]
+agw <- agw[,,wanted]
+test_statistic <- 1/prod(factorial(c(home_games_won,away_games_won)),na.rm=TRUE)
+f <- function(x){1/prod(factorial(x),na.rm=TRUE)}
+resampled_probs <- apply(agw,3,f) * apply(hgw,3,f)
+hist(log(resampled_probs))
+plot(log(resampled_probs),cex=0.2)
+abline(h = log(test_statistic))
+pvalue <- sum(resampled_probs[resampled_probs < test_statistic]) / sum(resampled_probs)
+pvalue
+```
+
+
+## References {-}
