@@ -87,7 +87,7 @@ An object of class \dQuote{\code{htest}}
 
 \deqn{
 p(B)=
-\sum_{\begin{array}{c}\mbox{permissable}\\\ \mbox{boards}\end{array}}
+\sum_{\begin{array}{c}\mbox{permissible}\\\ \mbox{boards}\end{array}}
 \frac{\left.
   \prod_{i=1}^{r}n_{i \cdot}!\cdot
   \prod_{j=1}^{c}n_{\cdot j}!\right/

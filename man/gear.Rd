@@ -1,7 +1,7 @@
 \name{gear}
 \alias{gear}
 \docType{data}
-\title{Dataset of subjective judgement of gear teeth}
+\title{Dataset of subjective judgment of gear teeth}
 \description{
 A gear (cog wheel) with seven teeth is taken out of service and 
 teeth examined for wear.  Only adjacent pairs of teeth may be compared,

@@ -15,7 +15,7 @@ odds.ratio(x)
 The generalized odds ratio is the product of the odds ratios of the
 edges in a cyclic competition graph.
 
-In the two-by-two case, the maximum likelihood estimatore of the odds
+In the two-by-two case, the maximum likelihood estimator of the odds
 ratio is just
 \eqn{\frac{a_{11}a_{22}}{a_{12}a_{21}}}{a[1,1]*a[2,2]/a[1,2]/a[2,1]}.
 The generalization to larger boards with exactly one degree of freedom

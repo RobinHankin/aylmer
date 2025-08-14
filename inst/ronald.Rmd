@@ -1,5 +1,5 @@
 ---
-title: The Ronald test"
+title: The Ronald test
 author: "R. K. S. Hankin"
 output: bookdown::html_document2
 bibliography: aylmer.bib
