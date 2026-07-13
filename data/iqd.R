@@ -5,8 +5,8 @@
               1L, 2L, NA, 2L, NA, NA, 3L,
               1L, NA, 1L, 0L, 2L, NA, NA
               ),
-            .Dim = c(7L, 4L),
-            .Dimnames = structure(
+            dim = c(7L, 4L),
+            dimnames = structure(
               list(
                    c(" ", " ", " ", " ", " ", " ", " "),
                    machine = c("A", "B", "C", "D")
@@ -21,8 +21,8 @@
               1L, 3L, 3L,
               NA, 8L, 2L
               ),
-            .Dim = c(3L, 3L),
-            .Dimnames = structure(
+            dim = c(3L, 3L),
+            dimnames = structure(
               list(
                    operator = c("S1", "S2", "S3"),
                    machine  = c("A", "B", "C"   )
