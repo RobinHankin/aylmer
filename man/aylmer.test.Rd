@@ -96,7 +96,7 @@ p(B)=
 \prod_{i=1}^{r}\prod_{j=1}^{c}\left(n_{ij}\right)!
 }}{ommitted; see pdf}
 
-The numerator is the same for any permissable board so is not
+The numerator is the same for any permissible board so is not
 calculated.
 
 If \code{simulate.p.value} is \code{TRUE}, the default value for
